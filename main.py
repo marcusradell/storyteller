@@ -9,6 +9,7 @@ RECORD_SECONDS = 5  # Process every 5 seconds of audio
 
 print("Loading Whisper model...")
 model = WhisperModel("base", device="cpu", compute_type="int8")
+print("Whisper model loaded!")
 
 print("Starting microphone... Speak in Swedish!")
 print("Press Ctrl+C to stop\n")
