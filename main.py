@@ -15,7 +15,7 @@ def main():
     transcription_file = f"recordings/{timestamp}.txt"
 
     model = Model()
-    stream = MicrophoneStream()
+    microphone_stream = MicrophoneStream()
 
     print(f"Recording to: {recording_file}")
     print("Press Ctrl+C to stop recording and transcribe...\n")
@@ -24,7 +24,7 @@ def main():
         with open(recording_file, "wb") as f:
             while True:
                 try:
-                    audio_data = stream.read(CHUNK)
+                    audio_data = microphone_stream.read(CHUNK)
                     f.write(audio_data)
                     f.flush()  # Ensure data is written to disk
                     print(".", end="", flush=True)  # Progress indicator
