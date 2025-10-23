@@ -4,9 +4,6 @@ CHUNK = 1024
 
 
 def MicrophoneStream():
-    print("Startar mikrofonen... Prata på svenska!")
-    print("Tryck Ctrl+C för att sluta\n")
-
     p = pyaudio.PyAudio()
     return p.open(
         format=pyaudio.paInt16,

@@ -37,7 +37,8 @@ def save_transcription(recording_file, transcription_file):
 
 
 def main():
-    print("Press Ctrl+C to stop recording and transcribe...\n")
+    print("Startar mikrofonen... Prata på svenska!")
+    print("Tryck Ctrl+C för att sluta spela in och börja transkriberingen.")
 
     os.makedirs("recordings", exist_ok=True)
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -45,7 +46,6 @@ def main():
 
     try:
         record_audio_stream(recording_file)
-
     except KeyboardInterrupt:
         print("Transcribing audio...\n")
 
