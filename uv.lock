@@ -1,0 +1,7 @@
+version = 1
+requires-python = ">=3.12"
+
+[[package]]
+name = "storyteller"
+version = "0.1.0"
+source = { virtual = "." }
