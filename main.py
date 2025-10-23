@@ -10,6 +10,7 @@ os.makedirs("recordings", exist_ok=True)
 # Generate timestamp-based filename
 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 recording_file = f"recordings/{timestamp}.raw"
+transcription_file = f"recordings/{timestamp}.txt"
 
 model = Model()
 stream = MicrophoneStream()
@@ -51,12 +52,17 @@ except KeyboardInterrupt:
     # Transcribe
     segments, _ = model.transcribe(audio_np, language="sv")
 
-    # Print results
+    # Print results and save to file
     print("\nTranscription:")
     print("-" * 50)
-    for segment in segments:
-        text = segment.text.strip()
-        if text:
-            print(f"→ {text}")
+    
+    with open(transcription_file, "w", encoding="utf-8") as f:
+        for segment in segments:
+            text = segment.text.strip()
+            if text:
+                print(f"→ {text}")
+                f.write(f"{text}\n")
+    
     print("-" * 50)
     print(f"\nRecording saved to: {recording_file}")
+    print(f"Transcription saved to: {transcription_file}")
