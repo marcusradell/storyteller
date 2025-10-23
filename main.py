@@ -4,7 +4,7 @@ from faster_whisper import WhisperModel
 
 # Settings
 RATE = 16000
-CHUNK = 1024
+CHUNK = 2048  # Increased buffer size to reduce overflow
 RECORD_SECONDS = 5  # Process every 5 seconds of audio
 
 print("Loading Whisper model...")
@@ -24,8 +24,12 @@ try:
         # Record audio chunk
         frames = []
         for _ in range(0, int(RATE / CHUNK * RECORD_SECONDS)):
-            data = stream.read(CHUNK)
-            frames.append(data)
+            try:
+                data = stream.read(CHUNK, exception_on_overflow=False)
+                frames.append(data)
+            except OSError as e:
+                print(f"Warning: Audio buffer overflow, skipping frame")
+                continue
 
         # Convert to numpy array
         audio_data = b"".join(frames)
@@ -45,6 +49,7 @@ try:
 except KeyboardInterrupt:
     print("\n\nStopping...")
 finally:
-    stream.stop_stream()
+    if stream.is_active():
+        stream.stop_stream()
     stream.close()
     p.terminate()
