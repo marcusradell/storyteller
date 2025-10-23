@@ -12,6 +12,28 @@ def record_audio_stream(recording_file):
         while True:
             audio_data = microphone_stream.read(CHUNK)
             f.write(audio_data)
+            f.flush()
+
+
+def save_transcription(recording_file, transcription_file):
+    with open(recording_file, "rb") as f:
+        all_audio_data = f.read()
+
+    # Convert to numpy array for transcription
+    audio_np = (
+        np.frombuffer(all_audio_data, dtype=np.int16).astype(np.float32) / 32768.0
+    )
+
+    model = Model()
+    segments, _info = model.transcribe(audio_np, language="sv")
+
+    with open(transcription_file, "w", encoding="utf-8") as f:
+        for segment in segments:
+            text = segment.text.strip()
+            if text:
+                content = f"{segment.start}-{segment.end}>{segment.text}"
+                print(content)
+                f.write(content + "\n")
 
 
 def main():
@@ -27,28 +49,10 @@ def main():
     except KeyboardInterrupt:
         print("Transcribing audio...\n")
 
-        with open(recording_file, "rb") as f:
-            all_audio_data = f.read()
-
-        # Convert to numpy array for transcription
-        audio_np = (
-            np.frombuffer(all_audio_data, dtype=np.int16).astype(np.float32) / 32768.0
-        )
-
-        model = Model()
-
-        segments, _info = model.transcribe(audio_np, language="sv")
-
         transcription_file = f"recordings/{timestamp}.txt"
-        with open(transcription_file, "w", encoding="utf-8") as f:
-            for segment in segments:
-                text = segment.text.strip()
-                if text:
-                    print(f"{text}")
-                    f.write(f"{text}\n")
+        save_transcription(recording_file, transcription_file)
 
-        print(f"Recording saved to: {recording_file}")
-        print(f"Transcription saved to: {transcription_file}")
+        print("Transcription saved!")
     except Exception as e:
         print(f"Error: {e}")
 
