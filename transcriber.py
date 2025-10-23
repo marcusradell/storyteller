@@ -1,4 +1,5 @@
 from model import Model
+import numpy as np
 
 
 class Transcriber:
