@@ -1,15 +1,13 @@
 import pyaudio
 import numpy as np
-from faster_whisper import WhisperModel
+from model import Model
 
 # Settings
 RATE = 16000
 CHUNK = 2048  # Increased buffer size to reduce overflow
 RECORD_SECONDS = 5  # Process every 5 seconds of audio
 
-print("Loading Whisper model...")
-model = WhisperModel("base", device="cpu", compute_type="int8")
-print("Whisper model loaded!")
+model = Model()
 
 print("Starting microphone... Speak in Swedish!")
 print("Press Ctrl+C to stop\n")
