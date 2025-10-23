@@ -6,37 +6,29 @@ import os
 
 
 def main():
-    # Create recordings directory if it doesn't exist
-    os.makedirs("recordings", exist_ok=True)
+    model = Model()
+    microphone_stream = MicrophoneStream()
+
+    print("Press Ctrl+C to stop recording and transcribe...\n")
 
     # Generate timestamp-based filename
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     recording_file = f"recordings/{timestamp}.raw"
     transcription_file = f"recordings/{timestamp}.txt"
 
-    model = Model()
-    microphone_stream = MicrophoneStream()
-
-    print(f"Recording to: {recording_file}")
-    print("Press Ctrl+C to stop recording and transcribe...\n")
+    # Create recordings directory if it doesn't exist
+    os.makedirs("recordings", exist_ok=True)
 
     try:
         with open(recording_file, "wb") as f:
             while True:
-                try:
-                    audio_data = microphone_stream.read(CHUNK)
-                    f.write(audio_data)
-                    f.flush()  # Ensure data is written to disk
-                    print(".", end="", flush=True)  # Progress indicator
-                except OSError:
-                    print("Warning: Audio buffer overflow, skipping frame")
-                    continue
+                audio_data = microphone_stream.read(CHUNK)
+                f.write(audio_data)
+                f.flush()  # Ensure data is written to disk
 
     except KeyboardInterrupt:
-        print("\n\nStopping recording...")
         print("Transcribing audio...\n")
 
-        # Read the recorded audio from file for transcription
         with open(recording_file, "rb") as f:
             all_audio_data = f.read()
 
@@ -46,7 +38,7 @@ def main():
         )
 
         # Transcribe
-        segments, _ = model.transcribe(audio_np, language="sv")
+        segments, _info = model.transcribe(audio_np, language="sv")
 
         # Print results and save to file
         print("\nTranscription:")
@@ -56,12 +48,14 @@ def main():
             for segment in segments:
                 text = segment.text.strip()
                 if text:
-                    print(f"→ {text}")
+                    print(f"{text}")
                     f.write(f"{text}\n")
 
         print("-" * 50)
         print(f"\nRecording saved to: {recording_file}")
         print(f"Transcription saved to: {transcription_file}")
+    except Exception as e:
+        print(f"Error: {e}")
 
 
 main()
