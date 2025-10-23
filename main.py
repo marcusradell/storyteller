@@ -5,25 +5,32 @@ from datetime import datetime
 import os
 
 
-def save_transcription(recording_filename, transcription_filename):
-    with open(recording_filename, "rb") as recording_file:
-        all_audio_data = recording_file.read()
+class Transcriber:
+    def __init__(self, recording_filename, transcription_filename):
+        self.transcription_filename = transcription_filename
+        self.recording_filename = recording_filename
+        self.model = Model()
 
-    # Convert to numpy array for transcription
-    audio_np = (
-        np.frombuffer(all_audio_data, dtype=np.int16).astype(np.float32) / 32768.0
-    )
+    def save(self):
+        with open(self.recording_filename, "rb") as recording_file:
+            all_audio_data = recording_file.read()
 
-    model = Model()
-    segments, _info = model.transcribe(audio_np, language="sv")
+        # Convert to numpy array for transcription
+        audio_np = (
+            np.frombuffer(all_audio_data, dtype=np.int16).astype(np.float32) / 32768.0
+        )
 
-    with open(transcription_filename, "w", encoding="utf-8") as transcription_file:
-        for segment in segments:
-            text = segment.text.strip()
-            if text:
-                content = f"{segment.start}-{segment.end}>{segment.text}"
-                print(content)
-                transcription_file.write(content + "\n")
+        segments, _info = self.model.transcribe(audio_np, language="sv")
+
+        with open(
+            self.transcription_filename, "w", encoding="utf-8"
+        ) as transcription_file:
+            for segment in segments:
+                text = segment.text.strip()
+                if text:
+                    content = f"{segment.start}-{segment.end}>{segment.text}"
+                    print(content)
+                    transcription_file.write(content + "\n")
 
 
 def main():
@@ -43,8 +50,9 @@ def main():
         recorder.stop()
 
         print("Transcribing audio...\n")
-        transcription_file = f"recordings/{timestamp}.txt"
-        save_transcription(recording_filename, transcription_file)
+        transcription_filename = f"recordings/{timestamp}.txt"
+        transcriber = Transcriber(recording_filename, transcription_filename)
+        transcriber.save()
         print("Transcription saved!")
 
     except Exception as e:

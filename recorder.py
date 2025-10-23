@@ -3,8 +3,8 @@ import threading
 
 
 class Recorder:
-    def __init__(self, recording_filename):
-        self.recording_filename = recording_filename
+    def __init__(self, filename):
+        self.filename = filename
         self.recording_thread = None
         self.frames_per_buffer = 1024
         self.pyAudio = pyaudio.PyAudio()
@@ -22,7 +22,7 @@ class Recorder:
     def _record_audio_stream(self):
         microphone_stream = self._open_stream()
 
-        with open(self.recording_filename, "wb") as file:
+        with open(self.filename, "wb") as file:
             while not self.stop_event.is_set():
                 audio_data = microphone_stream.read(self.get_frames_per_buffer())
                 file.write(audio_data)
@@ -31,6 +31,9 @@ class Recorder:
 
     def get_frames_per_buffer(self):
         return self.frames_per_buffer
+
+    def get_filename(self):
+        return self.filename
 
     def stop(self):
         self.stop_event.set()
