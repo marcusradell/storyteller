@@ -1,25 +1,20 @@
 import numpy as np
 from model import Model
-from microphone_stream import MicrophoneStream, CHUNK
+from recording import Recording
 from datetime import datetime
 import os
 import threading
 
 
-def record_audio_stream(recording_file, stop_event):
-    microphone_stream = MicrophoneStream()
-
-    with open(recording_file, "wb") as f:
-        while not stop_event.is_set():
-            audio_data = microphone_stream.read(CHUNK)
-            f.write(audio_data)
-
-    microphone_stream.close()
+def stop_recording_on_enter(stop_event, recording_thread):
+    # Wait for user to press Enter
+    stop_event.set()
+    recording_thread.join()
 
 
-def save_transcription(recording_file, transcription_file):
-    with open(recording_file, "rb") as f:
-        all_audio_data = f.read()
+def save_transcription(recording_filename, transcription_filename):
+    with open(recording_filename, "rb") as recording_file:
+        all_audio_data = recording_file.read()
 
     # Convert to numpy array for transcription
     audio_np = (
@@ -29,13 +24,13 @@ def save_transcription(recording_file, transcription_file):
     model = Model()
     segments, _info = model.transcribe(audio_np, language="sv")
 
-    with open(transcription_file, "w", encoding="utf-8") as f:
+    with open(transcription_filename, "w", encoding="utf-8") as transcription_file:
         for segment in segments:
             text = segment.text.strip()
             if text:
                 content = f"{segment.start}-{segment.end}>{segment.text}"
                 print(content)
-                f.write(content + "\n")
+                transcription_file.write(content + "\n")
 
 
 def main():
@@ -44,32 +39,23 @@ def main():
 
     os.makedirs("recordings", exist_ok=True)
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    recording_file = f"recordings/{timestamp}.raw"
+    recording_filename = f"recordings/{timestamp}.raw"
 
-    stop_event = threading.Event()
-
-    # Start recording in a separate thread
-    recording_thread = threading.Thread(
-        target=record_audio_stream, args=(recording_file, stop_event)
-    )
-    recording_thread.start()
+    recording = Recording(recording_filename)
+    recording.start()
 
     try:
-        # Wait for user to press Enter
         input()
         print("\nStopping recording...")
-        stop_event.set()
-        recording_thread.join()
+        recording.stop()
 
         print("Transcribing audio...\n")
         transcription_file = f"recordings/{timestamp}.txt"
-        save_transcription(recording_file, transcription_file)
+        save_transcription(recording_filename, transcription_file)
         print("Transcription saved!")
 
     except Exception as e:
         print(f"Error: {e}")
-        stop_event.set()
-        recording_thread.join()
 
 
 main()
