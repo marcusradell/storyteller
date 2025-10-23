@@ -2,7 +2,6 @@ import pyaudio
 
 RATE = 16000
 CHUNK = 2048
-RECORD_SECONDS = 5
 
 
 def MicrophoneStream():
