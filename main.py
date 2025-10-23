@@ -5,7 +5,9 @@ from datetime import datetime
 import os
 
 
-def record_audio_stream(microphone_stream, recording_file):
+def record_audio_stream(recording_file):
+    microphone_stream = MicrophoneStream()
+
     with open(recording_file, "wb") as f:
         while True:
             audio_data = microphone_stream.read(CHUNK)
@@ -13,21 +15,14 @@ def record_audio_stream(microphone_stream, recording_file):
 
 
 def main():
-    model = Model()
-    microphone_stream = MicrophoneStream()
-
     print("Press Ctrl+C to stop recording and transcribe...\n")
 
-    # Generate timestamp-based filename
+    os.makedirs("recordings", exist_ok=True)
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     recording_file = f"recordings/{timestamp}.raw"
-    transcription_file = f"recordings/{timestamp}.txt"
-
-    # Create recordings directory if it doesn't exist
-    os.makedirs("recordings", exist_ok=True)
 
     try:
-        record_audio_stream(microphone_stream, recording_file)
+        record_audio_stream(recording_file)
 
     except KeyboardInterrupt:
         print("Transcribing audio...\n")
@@ -40,13 +35,11 @@ def main():
             np.frombuffer(all_audio_data, dtype=np.int16).astype(np.float32) / 32768.0
         )
 
-        # Transcribe
+        model = Model()
+
         segments, _info = model.transcribe(audio_np, language="sv")
 
-        # Print results and save to file
-        print("\nTranscription:")
-        print("-" * 50)
-
+        transcription_file = f"recordings/{timestamp}.txt"
         with open(transcription_file, "w", encoding="utf-8") as f:
             for segment in segments:
                 text = segment.text.strip()
@@ -54,8 +47,7 @@ def main():
                     print(f"{text}")
                     f.write(f"{text}\n")
 
-        print("-" * 50)
-        print(f"\nRecording saved to: {recording_file}")
+        print(f"Recording saved to: {recording_file}")
         print(f"Transcription saved to: {transcription_file}")
     except Exception as e:
         print(f"Error: {e}")
