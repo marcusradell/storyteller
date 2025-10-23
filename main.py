@@ -1,15 +1,8 @@
 import numpy as np
 from model import Model
-from recording import Recording
+from recorder import Recorder
 from datetime import datetime
 import os
-import threading
-
-
-def stop_recording_on_enter(stop_event, recording_thread):
-    # Wait for user to press Enter
-    stop_event.set()
-    recording_thread.join()
 
 
 def save_transcription(recording_filename, transcription_filename):
@@ -41,13 +34,13 @@ def main():
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     recording_filename = f"recordings/{timestamp}.raw"
 
-    recording = Recording(recording_filename)
-    recording.start()
+    recorder = Recorder(recording_filename)
+    recorder.start()
 
     try:
         input()
         print("\nStopping recording...")
-        recording.stop()
+        recorder.stop()
 
         print("Transcribing audio...\n")
         transcription_file = f"recordings/{timestamp}.txt"

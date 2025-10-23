@@ -2,13 +2,13 @@ import pyaudio
 import threading
 
 
-class Recording:
+class Recorder:
     def __init__(self, recording_filename):
-        self.frames_per_buffer = 1024
         self.recording_filename = recording_filename
+        self.recording_thread = None
+        self.frames_per_buffer = 1024
         self.pyAudio = pyaudio.PyAudio()
         self.stop_event = threading.Event()
-        self.recording_thread = None
 
     def _open_stream(self):
         return self.pyAudio.open(
