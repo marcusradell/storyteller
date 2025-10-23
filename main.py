@@ -5,6 +5,13 @@ from datetime import datetime
 import os
 
 
+def record_audio_stream(microphone_stream, recording_file):
+    with open(recording_file, "wb") as f:
+        while True:
+            audio_data = microphone_stream.read(CHUNK)
+            f.write(audio_data)
+
+
 def main():
     model = Model()
     microphone_stream = MicrophoneStream()
@@ -20,11 +27,7 @@ def main():
     os.makedirs("recordings", exist_ok=True)
 
     try:
-        with open(recording_file, "wb") as f:
-            while True:
-                audio_data = microphone_stream.read(CHUNK)
-                f.write(audio_data)
-                f.flush()  # Ensure data is written to disk
+        record_audio_stream(microphone_stream, recording_file)
 
     except KeyboardInterrupt:
         print("Transcribing audio...\n")
