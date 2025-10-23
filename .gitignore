@@ -15,3 +15,5 @@ output.txt
 !.aider.conf.yml
 .env
 
+# Recordings
+recordings/

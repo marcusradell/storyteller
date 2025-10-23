@@ -1,53 +1,62 @@
-import pyaudio
 import numpy as np
 from model import Model
+from microphone_stream import MicrophoneStream, RATE, CHUNK, RECORD_SECONDS
+from datetime import datetime
+import os
 
-# Settings
-RATE = 16000
-CHUNK = 2048  # Increased buffer size to reduce overflow
-RECORD_SECONDS = 5  # Process every 5 seconds of audio
+# Create recordings directory if it doesn't exist
+os.makedirs("recordings", exist_ok=True)
+
+# Generate timestamp-based filename
+timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+recording_file = f"recordings/{timestamp}.raw"
 
 model = Model()
+stream = MicrophoneStream()
 
-print("Starting microphone... Speak in Swedish!")
-print("Press Ctrl+C to stop\n")
+print(f"Recording to: {recording_file}")
+print("Press Ctrl+C to stop recording and transcribe...\n")
 
-p = pyaudio.PyAudio()
-stream = p.open(
-    format=pyaudio.paInt16, channels=1, rate=RATE, input=True, frames_per_buffer=CHUNK
-)
+all_audio_data = b""
 
 try:
-    while True:
-        # Record audio chunk
-        frames = []
-        for _ in range(0, int(RATE / CHUNK * RECORD_SECONDS)):
-            try:
-                data = stream.read(CHUNK, exception_on_overflow=False)
-                frames.append(data)
-            except OSError as e:
-                print(f"Warning: Audio buffer overflow, skipping frame")
-                continue
+    with open(recording_file, "wb") as f:
+        while True:
+            # Record audio chunk
+            frames = []
+            for _ in range(0, int(RATE / CHUNK * RECORD_SECONDS)):
+                try:
+                    data = stream.read(CHUNK, exception_on_overflow=False)
+                    frames.append(data)
+                except OSError as e:
+                    print(f"Warning: Audio buffer overflow, skipping frame")
+                    continue
 
-        # Convert to numpy array
-        audio_data = b"".join(frames)
-        audio_np = (
-            np.frombuffer(audio_data, dtype=np.int16).astype(np.float32) / 32768.0
-        )
-
-        # Transcribe
-        segments, _ = model.transcribe(audio_np, language="sv")
-
-        # Print results
-        for segment in segments:
-            text = segment.text.strip()
-            if text:
-                print(f"→ {text}")
+            # Convert to binary data and save
+            audio_data = b"".join(frames)
+            f.write(audio_data)
+            f.flush()  # Ensure data is written to disk
+            all_audio_data += audio_data
+            print(".", end="", flush=True)  # Progress indicator
 
 except KeyboardInterrupt:
-    print("\n\nStopping...")
-finally:
-    if stream.is_active():
-        stream.stop_stream()
-    stream.close()
-    p.terminate()
+    print("\n\nStopping recording...")
+    print("Transcribing audio...\n")
+    
+    # Convert to numpy array for transcription
+    audio_np = (
+        np.frombuffer(all_audio_data, dtype=np.int16).astype(np.float32) / 32768.0
+    )
+
+    # Transcribe
+    segments, _ = model.transcribe(audio_np, language="sv")
+
+    # Print results
+    print("\nTranscription:")
+    print("-" * 50)
+    for segment in segments:
+        text = segment.text.strip()
+        if text:
+            print(f"→ {text}")
+    print("-" * 50)
+    print(f"\nRecording saved to: {recording_file}")
