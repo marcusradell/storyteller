@@ -1,7 +1,6 @@
 import pyaudio
 
-RATE = 16000
-CHUNK = 2048
+CHUNK = 1024
 
 
 def MicrophoneStream():
@@ -12,7 +11,7 @@ def MicrophoneStream():
     return p.open(
         format=pyaudio.paInt16,
         channels=1,
-        rate=RATE,
+        rate=16000,
         input=True,
         frames_per_buffer=CHUNK,
     )
