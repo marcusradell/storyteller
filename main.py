@@ -15,19 +15,15 @@ def main():
     recorder = Recorder(recording_filename)
     recorder.start()
 
-    try:
-        input()
-        print("\nStopping recording...")
-        recorder.stop()
+    input()
+    print("\nStopping recording...")
+    recorder.stop()
 
-        print("Transcribing audio...\n")
-        transcription_filename = f"recordings/{timestamp}.txt"
-        transcriber = Transcriber(recording_filename, transcription_filename)
-        transcriber.save()
-        print("Transcription saved!")
-
-    except Exception as e:
-        print(f"Error: {e}")
+    print("Transcribing audio...\n")
+    transcription_filename = f"recordings/{timestamp}.txt"
+    transcriber = Transcriber(recording_filename, transcription_filename)
+    transcriber.save()
+    print("Transcription saved!")
 
 
 main()
